@@ -35,5 +35,6 @@ public class Day01
 
 public record Pair(int X, int Y)
 {
-    public int Distance => Math.Abs(X - Y);
+    public int Difference => X - Y;
+    public int Distance => Math.Abs(Difference);
 }
