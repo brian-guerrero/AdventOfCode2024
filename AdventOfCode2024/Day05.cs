@@ -16,39 +16,79 @@ public class Day05
             .Select(update => update.Split(","))
             .Select(update => new PageUpdates(update.Select(int.Parse).ToList()));
 
-        return new PrintQueue(rules, updates);
+        return new PrintQueue(new PageOrderingRules(rules), updates);
     }
 
     public static int CountPrintableUpdates(string printQueueInstructions)
     {
         var queue = ParsePrintQueue(printQueueInstructions);
-        return queue.PrintableUpdates().Count();
+        return queue.ClassifyUpdates().SortedUpdates.Count();
     }
-    
-    public static int MiddlePageSumOfPrintableUpdates(string printQueueInstructions)
+
+    public static int MiddlePageSumOfSortedUpdates(string printQueueInstructions)
     {
         var queue = ParsePrintQueue(printQueueInstructions);
-        return queue.PrintableUpdates().Sum(update => update.MiddlePage);
+        return queue.ClassifyUpdates().SortedUpdates.Sum(update => update.MiddlePage);
+    }
+
+    public static int MiddlePageSumOfSortedOutOfOrderUpdates(string printQueueInstructions)
+    {
+        var queue = ParsePrintQueue(printQueueInstructions);
+        var sorted = queue.SortOutOfOrderUpdates();
+        return sorted.Sum(update => update.MiddlePage);
     }
 }
 
-public record PrintQueue(IEnumerable<PageOrderingRule> Rules, IEnumerable<PageUpdates> Updates)
+public record PrintQueue(PageOrderingRules Rules, IEnumerable<PageUpdates> Updates)
 {
-    public IEnumerable<PageUpdates> PrintableUpdates()
+    public (IEnumerable<PageUpdates> SortedUpdates, IEnumerable<PageUpdates> OutOfOrder) ClassifyUpdates()
     {
-        foreach(var update in Updates)
+        List<PageUpdates> correctlySorted = [];
+        List<PageUpdates> incorrectlySorted = [];
+        foreach (var update in Updates)
         {
-            var applicableRules = Rules.Where(rule => update.PageNumbers.Contains(rule.PrecedingPage) && update.PageNumbers.Contains(rule.FollowingPage));
-            if(applicableRules.All(rule => update.FollowRule(rule)))
+            var applicableRules = Rules.GetApplicableRules(update);
+            if (applicableRules.All(rule => update.FollowRule(rule)))
             {
-                yield return update;
+                correctlySorted.Add(update);
+            }
+            else
+            {
+                incorrectlySorted.Add(update);
             }
         }
+
+        return (correctlySorted, incorrectlySorted);
     }
+
+    public IEnumerable<PageUpdates> SortOutOfOrderUpdates() => ClassifyUpdates()
+        .OutOfOrder
+        .Select(update => update.SortPageNumbers(Rules));
 };
 
-public record PageOrderingRule(int PrecedingPage, int FollowingPage);
+public class PageOrderingRules(IEnumerable<PageOrderingRule> rules) : IEnumerable<PageOrderingRule>
+{
+    private readonly List<PageOrderingRule> _rules = rules.ToList();
 
+    public IEnumerator<PageOrderingRule> GetEnumerator()
+    {
+        return _rules.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public PageOrderingRules GetApplicableRules(PageUpdates pageUpdates)
+    {
+        return new PageOrderingRules(_rules.Where(rule =>
+            pageUpdates.PageNumbers.Contains(rule.PrecedingPage)
+            && pageUpdates.PageNumbers.Contains(rule.FollowingPage)));
+    }
+}
+
+public record PageOrderingRule(int PrecedingPage, int FollowingPage);
 
 public record PageUpdates(List<int> PageNumbers)
 {
@@ -57,6 +97,37 @@ public record PageUpdates(List<int> PageNumbers)
         return PageNumbers.IndexOf(rule.PrecedingPage) < PageNumbers.IndexOf(rule.FollowingPage);
     }
 
-    public int MiddlePage => PageNumbers.Skip(PageNumbers.Count/2).First();
-};
+    public PageUpdates SortPageNumbers(PageOrderingRules rules)
+    {
+        List<int> sortedPageNumbers = [];
+        var applicableRules = rules.GetApplicableRules(this);
+foreach (var pageNumber in PageNumbers)
+{
+    var latestInsertIndex = sortedPageNumbers.Count;
+    foreach (var rule in applicableRules)
+    {
+        if (rule.FollowingPage == pageNumber)
+        {
+            var precedingIndex = sortedPageNumbers.IndexOf(rule.PrecedingPage);
+            if (precedingIndex != -1)
+            {
+                latestInsertIndex = Math.Max(latestInsertIndex, precedingIndex + 1);
+            }
+        }
+        else if (rule.PrecedingPage == pageNumber)
+        {
+            var followingIndex = sortedPageNumbers.IndexOf(rule.FollowingPage);
+            if (followingIndex != -1)
+            {
+                latestInsertIndex = Math.Min(latestInsertIndex, followingIndex);
+            }
+        }
+    }
 
+    sortedPageNumbers.Insert(latestInsertIndex, pageNumber);
+}
+        return new PageUpdates(sortedPageNumbers);
+    }
+
+    public int MiddlePage => PageNumbers.Skip(PageNumbers.Count / 2).First();
+};

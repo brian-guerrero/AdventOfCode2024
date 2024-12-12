@@ -4564,6 +4564,7 @@ var day5Input = """
                 31,17,83,55,36,46,27,67,64,93,32
                 46,45,48,32,86,67,55,51,59
                 """;
-var day5Result = Day05.MiddlePageSumOfPrintableUpdates(day5Input);
+var day5Result = Day05.MiddlePageSumOfSortedUpdates(day5Input);
 Console.WriteLine("Sum of Printable Updates Result: " + day5Result);
-                
+var day5ResultTwo = Day05.MiddlePageSumOfSortedOutOfOrderUpdates(day5Input);
+Console.WriteLine("Sum of Sorted Out of Order Printable Updates Result: " + day5ResultTwo);             
