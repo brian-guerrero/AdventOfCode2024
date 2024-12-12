@@ -92,6 +92,7 @@ public class Day04
                             }
                         }
                     }
+
                     if (map.IsInBounds(x - 1, y + 1) && map[x - 1, y + 1] == 'M')
                     {
                         if (map.IsInBounds(x - 2, y + 2) && map[x - 2, y + 2] == 'A')
@@ -119,7 +120,34 @@ public class Day04
 
         return count;
     }
-    
+
+    public static int CountTwoMAS(string input)
+    {
+        var map = ParseMap(input);
+        var count = 0;
+        for (var y = 0; y < map.Height; y++)
+        {
+            for (var x = 0; x < map.Width; x++)
+            {
+                if (map[x, y] != 'A') continue;
+                if (map.IsInBounds(x + 1, y + 1) && map.IsInBounds(x - 1, y - 1) && map.IsInBounds(x - 1, y + 1) &&
+                    map.IsInBounds(x + 1, y - 1))
+                {
+                    if (map[x - 1, y + 1] is 'M' or 'S' && map[x + 1, y - 1] != map[x - 1, y + 1] &&
+                        map[x + 1, y - 1] is 'S' or 'M' and not 'A')
+                    {
+                        if (map[x - 1, y - 1] is 'M' or 'S' && map[x + 1, y + 1] != map[x - 1, y - 1] &&
+                            map[x + 1, y + 1]  is 'S' or 'M' and not 'A')
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
 }
 
 public record CharacterMap(char[,] Map)

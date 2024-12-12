@@ -20,4 +20,23 @@ public class Day04Tests
         var count = Day04.CountXMASes(input);
         Assert.Equal(18, count);
     }
+    
+    [Fact]
+    public void CountTwoMASesIsCorrect()
+    {
+        const string input = """
+                             .M.S......
+                             ..A..MSMS.
+                             .M.S.MAA..
+                             ..A.ASMSM.
+                             .M.S.M....
+                             ..........
+                             S.S.S.S.S.
+                             .A.A.A.A..
+                             M.M.M.M.M.
+                             ..........
+                             """;
+        var count = Day04.CountTwoMAS(input);
+        Assert.Equal(9, count);
+    }
 }

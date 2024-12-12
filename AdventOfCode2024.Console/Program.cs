@@ -3180,3 +3180,5 @@ const string day4Input = """
                          """;
 var day4Result = Day04.CountXMASes(day4Input);
 Console.WriteLine("XMAS Count Result: " + day4Result);
+var day4ResultTwo = Day04.CountTwoMAS(day4Input);
+Console.WriteLine("X-MAS Count Result: " + day4ResultTwo);
