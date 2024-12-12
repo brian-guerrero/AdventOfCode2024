@@ -29,4 +29,19 @@ public class Day02Tests
         var count = Day02.CountSafeReports(input);
         Assert.Equal(2, count);
     }
+    
+    [Fact]
+    public void CountSafeReportsWithToleranceIsCorrect()
+    {
+        const string input = """
+                             7 6 4 2 1
+                             1 2 7 8 9
+                             9 7 6 2 1
+                             1 3 2 4 5
+                             8 6 4 4 1
+                             1 3 6 7 9
+                             """;
+        var count = Day02.CountSafeReportsWithTolerance(input);
+        Assert.Equal(4, count);
+    }
 }

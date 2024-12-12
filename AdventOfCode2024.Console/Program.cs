@@ -3020,3 +3020,6 @@ const string input = """
 """;
 var day2SafeReportResult = Day02.CountSafeReports(input);
 Console.WriteLine("Day 2 Safe Report Result: " + day2SafeReportResult);
+var day2SafeReportWithToleranceResult = Day02.CountSafeReportsWithTolerance(input);
+Console.WriteLine("Day 2 Safe Report With Tolerance Result: " + day2SafeReportWithToleranceResult);
+
