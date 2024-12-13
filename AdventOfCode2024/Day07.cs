@@ -4,7 +4,7 @@ namespace AdventOfCode2024;
 
 public class Day07
 {
-    private static IEnumerable<CalibrationEquation> ParseCalibationEquation(string input)
+    private static IEnumerable<CalibrationEquation> ParseCalibrationEquation(string input)
     {
         var lines = input.Split("\r\n");
         foreach (var line in lines)
@@ -16,47 +16,67 @@ public class Day07
         }
     }
 
-    public static long CalculateTotalCalibrationResult(string input)
+    public static long CalculateTotalCalibrationWithOgOpsResult(string input)
     {
-        var equations = ParseCalibationEquation(input);
+        var equations = ParseCalibrationEquation(input);
         var correctlyCalibratedFunctions = equations
-            .Where(e => GenerateCalibrationFunctions(e)
-                .Any(f => f() == e.TestValue));
+            .Where(e => GetCalibrationFunctions(e, OgCalibrationOperators)
+                .Any(f => f == e.TestValue));
+        return correctlyCalibratedFunctions.Sum(e => e.TestValue);
+    }
+    
+    public static long CalculateTotalCalibrationWithNewOpsResult(string input)
+    {
+        var equations = ParseCalibrationEquation(input);
+        var correctlyCalibratedFunctions = equations
+            .Where(e => GetCalibrationFunctions(e, NewCalibrationOperators)
+                .Any(f => f == e.TestValue));
         return correctlyCalibratedFunctions.Sum(e => e.TestValue);
     }
 
-    private static IEnumerable<Func<long>> GenerateCalibrationFunctions(CalibrationEquation equation)
+    private static IEnumerable<long> GetCalibrationFunctions(CalibrationEquation equation, CalibrationOperator[] operators)
     {
-        var operationCombinations = GetPossibleOperatorCombinations(equation.EquationValues.Count - 1);
+        var operationCombinations = GetPossibleOperatorCombinations(equation.EquationValues.Count - 1, operators);
 
         return operationCombinations.Select(opCombo => GenerateCalibrationFunctions(equation, opCombo));
     }
 
-    private static Func<long> GenerateCalibrationFunctions(CalibrationEquation equation, char[] opCombo)
+    private static long GenerateCalibrationFunctions(CalibrationEquation equation, CalibrationOperator[] opCombo)
     {
-        Expression expression = Expression.Constant(equation.EquationValues[0]);
         var i = 1;
-        expression = opCombo.Aggregate(expression, (current, op) => op switch
+        var result =  opCombo.Aggregate(equation.EquationValues[0], (current, op) => op switch
         {
-            '+' => Expression.Add(current, Expression.Constant(equation.EquationValues[i++])),
-            '*' => Expression.Multiply(current, Expression.Constant(equation.EquationValues[i++])),
+            ConcatOperator => long.Parse($"{current}{equation.EquationValues[i++]}"),
+            AddOperator => current + equation.EquationValues[i++],
+            MultiplyOperator => current * equation.EquationValues[i++],
             _ => throw new ArgumentOutOfRangeException()
         });
-
-        return Expression.Lambda<Func<long>>(expression).Compile();
+        return result;
     }
 
-    private static IEnumerable<char[]> GetPossibleOperatorCombinations(int length)
+    private static IEnumerable<CalibrationOperator[]> GetPossibleOperatorCombinations(int length, CalibrationOperator[] operators)
     {
-        for (var i = 0; i < Math.Pow(CalibrationOperators.Length, length); i++)
+        var totalCombinations = (int)Math.Pow(operators.Length, length);
+        for (var i = 0; i < totalCombinations; i++)
         {
-            var binary = Convert.ToString(i, 2).PadLeft(length, '0');
-            yield return binary.Select(c => c == '0' ? '+' : '*').ToArray();
+            var combination = new CalibrationOperator[length];
+            var temp = i;
+            for (var j = 0; j < length; j++)
+            {
+                combination[j] = operators[temp % operators.Length];
+                temp /= operators.Length;
+            }
+            yield return combination;
         }
     }
 
 
-    private static readonly char[] CalibrationOperators = ['+', '*'];
+    private static readonly CalibrationOperator[] OgCalibrationOperators = [new AddOperator(), new MultiplyOperator()];
+    private static readonly CalibrationOperator[] NewCalibrationOperators = [new AddOperator(), new MultiplyOperator(), new ConcatOperator()];
 }
 
+public record CalibrationOperator();
+public record AddOperator() : CalibrationOperator;
+public record MultiplyOperator() : CalibrationOperator;
+public record ConcatOperator() : CalibrationOperator;
 public record CalibrationEquation(long TestValue, List<long> EquationValues);

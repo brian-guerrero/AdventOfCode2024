@@ -5558,5 +5558,7 @@ const string day7Input = """
                          77760221: 27 600 48 86 121 7 7
                          1003: 3 66 92 700 7 8 1
                          """;
-var day7Result = Day07.CalculateTotalCalibrationResult(day7Input);
+var day7Result = Day07.CalculateTotalCalibrationWithOgOpsResult(day7Input);
 Console.WriteLine("Day 7 Calibration Result: " + day7Result);
+var day7ResultTwo = Day07.CalculateTotalCalibrationWithNewOpsResult(day7Input);
+Console.WriteLine("Day 7 Calibration With New Ops Result: " + day7ResultTwo);
