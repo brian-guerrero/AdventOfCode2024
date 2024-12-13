@@ -2,12 +2,12 @@
 
 public class Day06
 {
-    
-    public static bool IsInBounds(int x, int y, MapObject[,] map)
+    private static bool IsInBounds(int x, int y, MapObject[,] map)
     {
         return x >= 0 && x < map.GetLength(1) && y >= 0 && y < map.GetLength(0);
     }
-    public static MapObject[,] ParseLabMap(string input)
+
+    private static MapObject[,] ParseLabMap(string input)
     {
         var lines = input.Split("\r\n");
         var map = new MapObject[lines.Length, lines[0].Length];
@@ -27,18 +27,20 @@ public class Day06
 
         return map;
     }
-    
-    public static (int Steps, int DistinctPositions) SimulateGuardSteps(string input)
+
+    private static (List<Coordinates> Coordinates, bool GuardLooped) SimulateGuardSteps(MapObject[,] map)
     {
-        var map = ParseLabMap(input);
         var guard = map.OfType<Guard>().Single();
         var direction = Direction.Up;
-        var steps = 0;
         var yOffset = 0;
         var xOffset = 0;
-        List<Coordinates> visited = new();
-        visited.Add(guard.Position);
-        while(IsInBounds(guard.Position.X + xOffset, guard.Position.Y  + yOffset, map))
+        HashSet<(Coordinates Positions, Direction)> visited = new()
+        {
+            (guard.Position, direction)
+        };
+        var guardLooped = false;
+        int duplicateCount = 0;
+        while (IsInBounds(guard.Position.X + xOffset, guard.Position.Y + yOffset, map) && !guardLooped)
         {
             yOffset = Direction.Up == direction ? -1 : Direction.Down == direction ? 1 : 0;
             xOffset = Direction.Left == direction ? -1 : Direction.Right == direction ? 1 : 0;
@@ -57,12 +59,43 @@ public class Day06
                     Direction.Left => new Guard(guard.Position.X - 1, guard.Position.Y),
                     _ => guard
                 };
-                steps++;
-                visited.Add(guard.Position);
+            }
+
+            if (visited.Add((guard.Position, direction))) continue;
+            duplicateCount++;
+            if (duplicateCount >= visited.Count)
+            {
+                guardLooped = true;
             }
         }
-        
-        return (steps, visited.Distinct().Count());
+
+        return (visited.Select(t => t.Positions).ToList(), guardLooped);
+    }
+
+    public static int DistinctPositions(string input)
+    {
+        var map = ParseLabMap(input);
+        return SimulateGuardSteps(map).Coordinates.Distinct().Count();
+    }
+
+    public static int CalculatePossibleGuardLoopPositions(string input)
+    {
+        var map = ParseLabMap(input);
+        var potentialObstacleLocations = SimulateGuardSteps(map).Coordinates.Distinct();
+        var obstaclePositionLocationCount = 0;
+        foreach (var location in potentialObstacleLocations)
+        {
+            if (map[location.Y, location.X] is not EmptySpace) continue;
+            map[location.Y, location.X] = new Obstacle();
+            if (SimulateGuardSteps(map).GuardLooped)
+            {
+                obstaclePositionLocationCount++;
+            }
+
+            map[location.Y, location.X] = new EmptySpace();
+        }
+
+        return obstaclePositionLocationCount;
     }
 }
 
@@ -74,7 +107,6 @@ public enum Direction
     Left = 3
 }
 
-
 public record MapObject;
 
 public record Coordinates(int X, int Y);
@@ -85,5 +117,7 @@ public record Guard(Coordinates Position) : MapObject
     {
     }
 };
+
 public record Obstacle : MapObject;
+
 public record EmptySpace : MapObject;

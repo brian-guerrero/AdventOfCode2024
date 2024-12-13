@@ -4701,5 +4701,7 @@ const string day6Input = """
                          ...##..............#........................#.............#.......#...........#.#.##..............................#....##.........
                          ......#...........#....................................................#.........................##...............................
                          """;
-var day6Result = Day06.SimulateGuardSteps(day6Input).DistinctPositions;
+var day6Result = Day06.DistinctPositions(day6Input);
 Console.WriteLine("Day 6 Guard Steps Result: " + day6Result);
+var day6ResultTwo = Day06.CalculatePossibleGuardLoopPositions(day6Input);
+Console.WriteLine("Day 6 Obstacle Loop Positions Result: " + day6ResultTwo);
